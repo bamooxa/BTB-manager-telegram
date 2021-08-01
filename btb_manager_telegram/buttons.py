@@ -247,6 +247,9 @@ def current_ratios():
                 config.read_file(cfg)
                 bridge = config.get("binance_user_config", "bridge")
                 scout_multiplier = config.get("binance_user_config", "scout_multiplier")
+                fee = config.get("binance_user_config", "trade_fee")
+                if fee == "auto":
+                    fee = 0.01
 
             con = sqlite3.connect(db_file_path)
             cur = con.cursor()
@@ -270,7 +273,7 @@ def current_ratios():
             try:
                 cur.execute(
                     f"""SELECT sh.datetime, p.to_coin_id, sh.other_coin_price, 
-                    (1 - (2*0.001-0.000001)) * ( current_coin_price / other_coin_price ) / sh.target_ratio - '{scout_multiplier}' / 100 - 1
+                    (1 - (2*fee-fee^2)) * ( current_coin_price / other_coin_price ) / sh.target_ratio - '{scout_multiplier}' / 100 - 1
                     AS 'ratio_dict' FROM scout_history sh JOIN pairs p ON p.id = sh.pair_id WHERE p.from_coin_id='{current_coin}' AND 
                     p.from_coin_id = ( SELECT alt_coin_id FROM trade_history ORDER BY datetime DESC LIMIT 1) ORDER BY sh.datetime DESC LIMIT ( SELECT count(DISTINCT pairs.to_coin_id) FROM pairs JOIN coins ON coins.symbol = pairs.to_coin_id WHERE coins.enabled = 1 AND pairs.from_coin_id='{current_coin}');"""
                 )
