@@ -249,7 +249,7 @@ def current_ratios():
                 scout_multiplier = config.get("binance_user_config", "scout_multiplier")
                 fee = config.get("binance_user_config", "trade_fee")
                 if fee == "auto":
-                    fee = 0.01
+                    fee = 0.001
 
             con = sqlite3.connect(db_file_path)
             cur = con.cursor()
