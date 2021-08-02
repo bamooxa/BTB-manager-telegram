@@ -20,7 +20,7 @@ def current_value():
     logger.info("Current value button pressed.")
 
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
-    message = [f"⚠ Unable to find database file at `{db_file_path}`\."]
+    message = [f"âš  Unable to find database file at `{db_file_path}`\."]
     if os.path.exists(db_file_path):
         try:
             con = sqlite3.connect(db_file_path)
@@ -48,10 +48,10 @@ def current_value():
                     ]
             except Exception as e:
                 logger.error(
-                    f"❌ Unable to fetch current coin from database: {e}", exc_info=True
+                    f"âŒ Unable to fetch current coin from database: {e}", exc_info=True
                 )
                 con.close()
-                return ["❌ Unable to fetch current coin from database\."]
+                return ["âŒ Unable to fetch current coin from database\."]
 
             # Get balance, current coin price in USD, current coin price in BTC
             try:
@@ -83,8 +83,8 @@ def current_value():
 
                 if query is None:
                     return [
-                        f"❌ No information about *{current_coin}* available in the database\.",
-                        "⚠ If you tried using the `Current value` button during a trade please try again after the trade has been completed\.",
+                        f"âŒ No information about *{current_coin}* available in the database\.",
+                        "âš  If you tried using the `Current value` button during a trade please try again after the trade has been completed\.",
                     ]
 
                 balance, usd_price, btc_price, last_update = query
@@ -131,13 +131,13 @@ def current_value():
                     )
             except Exception as e:
                 logger.error(
-                    f"❌ Unable to fetch current coin information from database: {e}",
+                    f"âŒ Unable to fetch current coin information from database: {e}",
                     exc_info=True,
                 )
                 con.close()
                 return [
-                    "❌ Unable to fetch current coin information from database\.",
-                    "⚠ If you tried using the `Current value` button during a trade please try again after the trade has been completed\.",
+                    "âŒ Unable to fetch current coin information from database\.",
+                    "âš  If you tried using the `Current value` button during a trade please try again after the trade has been completed\.",
                 ]
 
             # Generate message
@@ -159,18 +159,18 @@ def current_value():
                 con.close()
             except Exception as e:
                 logger.error(
-                    f"❌ Something went wrong, unable to generate value at this time: {e}",
+                    f"âŒ Something went wrong, unable to generate value at this time: {e}",
                     exc_info=True,
                 )
                 con.close()
                 return [
-                    "❌ Something went wrong, unable to generate value at this time\."
+                    "âŒ Something went wrong, unable to generate value at this time\."
                 ]
         except Exception as e:
             logger.error(
-                f"❌ Unable to perform actions on the database: {e}", exc_info=True
+                f"âŒ Unable to perform actions on the database: {e}", exc_info=True
             )
-            message = ["❌ Unable to perform actions on the database\."]
+            message = ["âŒ Unable to perform actions on the database\."]
     return message
 
 
@@ -178,7 +178,7 @@ def check_progress():
     logger.info("Progress button pressed.")
 
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
-    message = [f"⚠ Unable to find database file at `{db_file_path}`\."]
+    message = [f"âš  Unable to find database file at `{db_file_path}`\."]
     if os.path.exists(db_file_path):
         try:
             con = sqlite3.connect(db_file_path)
@@ -220,16 +220,16 @@ def check_progress():
                 con.close()
             except Exception as e:
                 logger.error(
-                    f"❌ Unable to fetch progress information from database: {e}",
+                    f"âŒ Unable to fetch progress information from database: {e}",
                     exc_info=True,
                 )
                 con.close()
-                return ["❌ Unable to fetch progress information from database\."]
+                return ["âŒ Unable to fetch progress information from database\."]
         except Exception as e:
             logger.error(
-                f"❌ Unable to perform actions on the database: {e}", exc_info=True
+                f"âŒ Unable to perform actions on the database: {e}", exc_info=True
             )
-            message = ["❌ Unable to perform actions on the database\."]
+            message = ["âŒ Unable to perform actions on the database\."]
     return message
 
 
@@ -238,7 +238,7 @@ def current_ratios():
 
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
     user_cfg_file_path = os.path.join(settings.ROOT_PATH, "user.cfg")
-    message = [f"⚠ Unable to find database file at `{db_file_path}`\."]
+    message = [f"âš  Unable to find database file at `{db_file_path}`\."]
     if os.path.exists(db_file_path):
         try:
             # Get bridge currency symbol
@@ -264,18 +264,15 @@ def current_ratios():
                     raise Exception()
             except Exception as e:
                 logger.error(
-                    f"❌ Unable to fetch current coin from database: {e}", exc_info=True
+                    f"âŒ Unable to fetch current coin from database: {e}", exc_info=True
                 )
                 con.close()
-                return ["❌ Unable to fetch current coin from database\."]
+                return ["âŒ Unable to fetch current coin from database\."]
 
             # Get prices and ratios of all alt coins
             try:
                 cur.execute(
-                    f"""SELECT sh.datetime, p.to_coin_id, sh.other_coin_price, 
-                    (1 - (2*fee-fee^2)) * ( current_coin_price / other_coin_price ) / sh.target_ratio - '{scout_multiplier}' / 100 - 1
-                    AS 'ratio_dict' FROM scout_history sh JOIN pairs p ON p.id = sh.pair_id WHERE p.from_coin_id='{current_coin}' AND 
-                    p.from_coin_id = ( SELECT alt_coin_id FROM trade_history ORDER BY datetime DESC LIMIT 1) ORDER BY sh.datetime DESC LIMIT ( SELECT count(DISTINCT pairs.to_coin_id) FROM pairs JOIN coins ON coins.symbol = pairs.to_coin_id WHERE coins.enabled = 1 AND pairs.from_coin_id='{current_coin}');"""
+                    f"""SELECT sh.datetime, p.to_coin_id, sh.other_coin_price, (1 - (2 * '{fee}' - '{fee}' * '{fee}')) * ( current_coin_price / other_coin_price ) / sh.target_ratio - 1 - '{scout_multiplier}' / 100 AS 'ratio_dict' FROM scout_history sh JOIN pairs p ON p.id = sh.pair_id WHERE p.from_coin_id='{current_coin}' AND p.from_coin_id = ( SELECT alt_coin_id FROM trade_history ORDER BY datetime DESC LIMIT 1) ORDER BY sh.datetime DESC LIMIT ( SELECT count(DISTINCT pairs.to_coin_id) FROM pairs JOIN coins ON coins.symbol = pairs.to_coin_id WHERE coins.enabled = 1 AND pairs.from_coin_id='{current_coin}');"""
                 )
                 query = cur.fetchall()
 
@@ -300,28 +297,28 @@ def current_ratios():
                 con.close()
             except Exception as e:
                 logger.error(
-                    f"❌ Something went wrong, unable to generate ratios at this time: {e}",
+                    f"âŒ Something went wrong, unable to generate ratios at this time: {e}",
                     exc_info=True,
                 )
                 con.close()
                 return [
-                    "❌ Something went wrong, unable to generate ratios at this time\.",
-                    "⚠ Please make sure logging for _Binance Trade Bot_ is enabled\.",
+                    "âŒ Something went wrong, unable to generate ratios at this time\.",
+                    "âš  Please make sure logging for _Binance Trade Bot_ is enabled\.",
                 ]
         except Exception as e:
             logger.error(
-                f"❌ Unable to perform actions on the database: {e}", exc_info=True
+                f"âŒ Unable to perform actions on the database: {e}", exc_info=True
             )
-            message = ["❌ Unable to perform actions on the database\."]
+            message = ["âŒ Unable to perform actions on the database\."]
     return message
 
 
 def check_status():
     logger.info("Check status button pressed.")
 
-    message = "⚠ Binance Trade Bot is not running."
+    message = "âš  Binance Trade Bot is not running."
     if get_binance_trade_bot_process():
-        message = "✔ Binance Trade Bot is running."
+        message = "âœ” Binance Trade Bot is running."
     return message
 
 
@@ -329,7 +326,7 @@ def trade_history():
     logger.info("Trade history button pressed.")
 
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
-    message = [f"⚠ Unable to find database file at `{db_file_path}`\."]
+    message = [f"âš  Unable to find database file at `{db_file_path}`\."]
     if os.path.exists(db_file_path):
         try:
             con = sqlite3.connect(db_file_path)
@@ -359,25 +356,25 @@ def trade_history():
                 con.close()
             except Exception as e:
                 logger.error(
-                    f"❌ Something went wrong, unable to generate trade history at this time: {e}",
+                    f"âŒ Something went wrong, unable to generate trade history at this time: {e}",
                     exc_info=True,
                 )
                 con.close()
                 return [
-                    "❌ Something went wrong, unable to generate trade history at this time\."
+                    "âŒ Something went wrong, unable to generate trade history at this time\."
                 ]
         except Exception as e:
             logger.error(
-                f"❌ Unable to perform actions on the database: {e}", exc_info=True
+                f"âŒ Unable to perform actions on the database: {e}", exc_info=True
             )
-            message = ["❌ Unable to perform actions on the database\."]
+            message = ["âŒ Unable to perform actions on the database\."]
     return message
 
 
 def start_bot():
     logger.info("Start bot button pressed.")
 
-    message = "⚠ Binance Trade Bot is already running\."
+    message = "âš  Binance Trade Bot is already running\."
     if not get_binance_trade_bot_process():
         if os.path.isfile(settings.PYTHON_PATH):
             if os.path.exists(os.path.join(settings.ROOT_PATH, "binance_trade_bot/")):
@@ -386,30 +383,30 @@ def start_bot():
                     shell=True,
                 )
                 if get_binance_trade_bot_process():
-                    message = "✔ Binance Trade Bot successfully started\."
+                    message = "âœ” Binance Trade Bot successfully started\."
                 else:
-                    message = "❌ Unable to start Binance Trade Bot\."
+                    message = "âŒ Unable to start Binance Trade Bot\."
             else:
                 message = (
-                    f"❌ Unable to find _Binance Trade Bot_ installation at `{settings.ROOT_PATH}`\.\n"
+                    f"âŒ Unable to find _Binance Trade Bot_ installation at `{settings.ROOT_PATH}`\.\n"
                     f"Make sure the `binance-trade-bot` and `BTB-manager-telegram` are in the same parent directory\."
                 )
         else:
-            message = f"❌ Unable to find python binary at `{settings.PYTHON_PATH}`\.\n"
+            message = f"âŒ Unable to find python binary at `{settings.PYTHON_PATH}`\.\n"
     return message
 
 
 def stop_bot():
     logger.info("Stop bot button pressed.")
 
-    message = "⚠ Binance Trade Bot is not running."
+    message = "âš  Binance Trade Bot is not running."
     if get_binance_trade_bot_process():
         find_and_kill_binance_trade_bot_process()
         if not get_binance_trade_bot_process():
-            message = "✔ Successfully stopped the bot."
+            message = "âœ” Successfully stopped the bot."
         else:
             message = (
-                "❌ Unable to stop Binance Trade Bot.\n\n"
+                "âŒ Unable to stop Binance Trade Bot.\n\n"
                 "If you are running the telegram bot on Windows make sure to run with administrator privileges."
             )
     return message
@@ -419,7 +416,7 @@ def read_log():
     logger.info("Read log button pressed.")
 
     log_file_path = os.path.join(settings.ROOT_PATH, "logs/crypto_trading.log")
-    message = f"❌ Unable to find log file at `{log_file_path}`.".replace(".", "\.")
+    message = f"âŒ Unable to find log file at `{log_file_path}`.".replace(".", "\.")
     if os.path.exists(log_file_path):
         with open(log_file_path) as f:
             file_content = f.read().replace(".", "\.")[-4000:]
@@ -435,7 +432,7 @@ def read_log():
 def delete_db():
     logger.info("Delete database button pressed.")
 
-    message = "⚠ Please stop Binance Trade Bot before deleting the database file\."
+    message = "âš  Please stop Binance Trade Bot before deleting the database file\."
     delete = False
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
     if not get_binance_trade_bot_process():
@@ -445,7 +442,7 @@ def delete_db():
             )
             delete = True
         else:
-            message = f"⚠ Unable to find database file at `{db_file_path}`.".replace(
+            message = f"âš  Unable to find database file at `{db_file_path}`.".replace(
                 ".", "\."
             )
     return [message, delete]
@@ -454,7 +451,7 @@ def delete_db():
 def edit_user_cfg():
     logger.info("Edit user configuration button pressed.")
 
-    message = "⚠ Please stop Binance Trade Bot before editing user configuration file\."
+    message = "âš  Please stop Binance Trade Bot before editing user configuration file\."
     edit = False
     user_cfg_file_path = os.path.join(settings.ROOT_PATH, "user.cfg")
     if not get_binance_trade_bot_process():
@@ -472,7 +469,7 @@ def edit_user_cfg():
                 )
                 edit = True
         else:
-            message = f"❌ Unable to find user configuration file at `{user_cfg_file_path}`.".replace(
+            message = f"âŒ Unable to find user configuration file at `{user_cfg_file_path}`.".replace(
                 ".", "\."
             )
     return [message, edit]
@@ -481,7 +478,7 @@ def edit_user_cfg():
 def edit_coin():
     logger.info("Edit coin list button pressed.")
 
-    message = "⚠ Please stop Binance Trade Bot before editing the coin list\."
+    message = "âš  Please stop Binance Trade Bot before editing the coin list\."
     edit = False
     coin_file_path = os.path.join(settings.ROOT_PATH, "supported_coin_list")
     if not get_binance_trade_bot_process():
@@ -497,7 +494,7 @@ def edit_coin():
                 )
                 edit = True
         else:
-            message = f"❌ Unable to find coin list file at `{coin_file_path}`.".replace(
+            message = f"âŒ Unable to find coin list file at `{coin_file_path}`.".replace(
                 ".", "\."
             )
     return [message, edit]
@@ -506,7 +503,7 @@ def edit_coin():
 def export_db():
     logger.info("Export database button pressed.")
 
-    message = "⚠ Please stop Binance Trade Bot before exporting the database file\."
+    message = "âš  Please stop Binance Trade Bot before exporting the database file\."
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
     fil = None
     if not get_binance_trade_bot_process():
@@ -515,12 +512,12 @@ def export_db():
                 fil = db.read()
             message = "Here is your database file:"
         else:
-            message = "❌ Unable to Export the database file\."
+            message = "âŒ Unable to Export the database file\."
     return [message, fil]
 
 
 def update_tg_bot():
-    logger.info("⬆ Update Telegram Bot button pressed.")
+    logger.info("â¬† Update Telegram Bot button pressed.")
 
     message = "Your BTB Manager Telegram installation is already up to date\."
     upd = False
@@ -540,7 +537,7 @@ def update_tg_bot():
 
 
 def update_btb():
-    logger.info("⬆ Update Binance Trade Bot button pressed.")
+    logger.info("â¬† Update Binance Trade Bot button pressed.")
 
     message = "Your Binance Trade Bot installation is already up to date\."
     upd = False
@@ -558,7 +555,7 @@ def update_btb():
 
 
 def panic_btn():
-    logger.info("🚨 Panic Button button pressed.")
+    logger.info("ðŸš¨ Panic Button button pressed.")
 
     # Check if open orders / not in usd
     db_file_path = os.path.join(settings.ROOT_PATH, "data/crypto_trading.db")
@@ -650,13 +647,13 @@ def panic_btn():
         except Exception as e:
             con.close()
             logger.error(
-                f"❌ Something went wrong, the panic button is not working at this time: {e}",
+                f"âŒ Something went wrong, the panic button is not working at this time: {e}",
                 exc_info=True,
             )
             return [
-                "❌ Something went wrong, the panic button is not working at this time\.",
+                "âŒ Something went wrong, the panic button is not working at this time\.",
                 -1,
             ]
     except Exception as e:
-        logger.error(f"❌ Unable to perform actions on the database: {e}", exc_info=True)
-        return ["❌ Unable to perform actions on the database\.", -1]
+        logger.error(f"âŒ Unable to perform actions on the database: {e}", exc_info=True)
+        return ["âŒ Unable to perform actions on the database\.", -1]
